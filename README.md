@@ -8,3 +8,4 @@ cell-type-specific and clinicopathological dynamics along annotated trajectories
 We applied DeepDynamics to 1,092 cortical bulk aging brain profiles to reveal cellular, pathological, and molecular mediators of Alzheiemr's disease.
 By unifying genetic risk, pathology, and cell-type dynamics, DeepDynamics provides a scalable approach to prioritize putative mediators of risk and resilience 
 amid the myriad changes along the cascade, thus informing targeted therapies.
+![Uploading Screenshot 2025-07-13 at 19.38.30.png…]()
