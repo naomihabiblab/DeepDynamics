@@ -1,0 +1,20 @@
+Dynamic time warping comparison of disease dynamics (Methods)
+
+We quantified agreement between model-predicted and ground-truth disease dynamics in the 500 cohort using dynamic time warping (DTW). Comparisons were performed separately for each benchmarked model, trajectory (prAD and ABA), and pathology or clinical feature.
+
+Dynamics curve estimation
+For each model and for ground truth, we estimated smoothed dynamics curves along pseudotime using a shared trajectory-weighted generalized additive model (GAM) pipeline. Inputs comprised per-donor prAD and ABA trajectory probabilities, pseudotime, and the features sqrt.amyloid_mf, sqrt.tangles_mf, braaksc, and cogng_demog_slope. For ground truth, trajectory assignments and pseudotime were taken from single-cell–derived reference values; pathology and clinical features were merged by donor ID from bulk metadata. For each model, prAD, ABA, and pseudotime were taken from that model’s full-sample predictions. Within each trajectory, a separate weighted GAM was fit for each feature as y ~ s(x), where x denotes pseudotime and sample weights equal the corresponding trajectory probability. Fitting was restricted to the trajectory-specific pseudotime range (terminal pseudotime: ABA = 1.047, prAD = 0.33). The pipeline produced smoothed prediction curves (`fit`) evaluated on a pseudotime grid (`x`) for each (trajectory, feature) pair. Model curves were taken from full-sample dynamics outputs; ground-truth curves were generated with the same pipeline applied to reference trajectory labels and pseudotime.
+
+DTW distance computation
+For each model, we compared the ground-truth and model smoothed dynamics curves for every (trajectory, feature) combination present in both sets. Curves were aligned onto a shared, evenly spaced pseudotime grid of 50 points spanning the overlap of their pseudotime ranges,
+  [max(x_GT,min, x_model,min), min(x_GT,max, x_model,max)].
+Both curves were linearly interpolated onto this grid. Grid points with non-finite interpolated values in either curve were excluded; combinations with fewer than three valid grid points were omitted.
+
+Dynamic time warping distance was computed using classic DTW with an L1 local cost,
+  c(i, j) = |y_GT(i) − y_model(j)|,
+and cumulative cost
+  D(i, j) = c(i, j) + min{ D(i−1, j), D(i, j−1), D(i−1, j−1) }.
+The reported DTW distance was D(n, m) at the grid endpoints. We additionally computed a length-normalized distance, DTW per step = D(n, m) / n, where n is the number of valid grid points used.
+
+Output
+Results were summarized in a table with one row per (model, trajectory, feature), recording the raw DTW distance, length-normalized DTW distance, the number of grid points used, and the overlapping pseudotime interval.

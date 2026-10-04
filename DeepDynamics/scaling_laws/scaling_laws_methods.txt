@@ -1,0 +1,18 @@
+Sample-size scaling analysis (Methods)
+
+We assessed how bulk training cohort size affects out-of-sample prediction of single-cell-derived disease dynamics in the 500 cohort. Analyses used bulk RNA-seq samples from donors with matched single-cell RNA-seq (shared donors). Supervised targets were Palantir trajectory branch probabilities for prAD and ABA and continuous pseudotime; samples with missing pseudotime were excluded.
+
+Data partitioning
+The full dataset was split once into a training pool (75%) and a fixed held-out test set (25%; random_state = 42). The test set was never used for training, validation, or model selection. All reported performance was evaluated exclusively on this held-out test set.
+
+Training sample-size sweep
+Within the training pool, we trained models at six logarithmically spaced training set sizes: n ∈ {20, 35, 60, 100, 175, 278}, retaining only sizes not exceeding the available training pool. At each n, we drew n training samples without replacement from the training pool. To quantify variability due to subsampling, we repeated this procedure B = 10 times per n, using independent subsamples (bootstrap index i = 0, …, 9).
+
+Model training
+For each subsampled training set, we trained ProbModel, a feed-forward neural network mapping 58-dimensional bulk cell-state proportions to three outputs: logits for the two trajectory branches (prAD, ABA) and pseudotime. The network comprised four fully connected layers (58 → 90 → 140 → 90 → 3) with ReLU activations. Training used the Adam optimizer (learning rate 1 × 10⁻⁵), mini-batches of size 10, and up to 2,000 epochs. Each subsampled training set was further split into training and validation subsets (75%/25%; random_state = 42); training was stopped by validation-based early stopping (patience = 10 epochs). The objective combined cross-entropy and Kullback–Leibler divergence on branch probabilities with mean squared error on pseudotime, plus L1 weight regularization (λ₁ = 5.54 × 10⁻⁵; λ₂ = 0). Training settings were held constant across all sample sizes. Models were trained on GPU when available.
+
+Performance metrics
+For each trained model, we computed evaluation metrics on the fixed held-out test set. Loss-based metrics comprised total loss (sum of cross-entropy, KL divergence, and pseudotime MSE components) and each component separately. Correlation-based metrics comprised Pearson and Spearman correlations between predictions and ground truth for prAD probability, ABA probability, and pseudotime. For pseudotime, we additionally computed branch-specific correlations restricted to test samples assigned to each trajectory by the predicted branch probability (> 0.5 for prAD or ABA), and the mean of the two branch-specific correlation values (with branch-specific metrics set to missing when fewer than two samples were assigned to a branch). For branch probabilities, predicted values were obtained by applying softmax to the model logits.
+
+Aggregation and visualization
+For each training size n and each metric, we summarized performance across the B = 10 bootstrap repetitions as the mean ± standard deviation. Scaling curves were plotted with the number of training samples on a logarithmic x-axis and metric value on the y-axis, with error bars denoting bootstrap standard deviations. Metrics were grouped for display into loss metrics, global Spearman correlations, global Pearson correlations, and branch-specific pseudotime correlations.

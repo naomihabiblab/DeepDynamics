@@ -1,0 +1,34 @@
+Model benchmarking (Methods)
+
+We benchmarked ProbModel against baseline regression models for predicting single-cell–derived disease dynamics from bulk RNA-seq in the 500 cohort. Analyses used shared donors (subjects with matched single-cell and bulk RNA-seq). Model inputs were bulk cell-state proportions; supervised targets were Palantir trajectory branch probabilities for prAD and ABA and continuous pseudotime.
+
+Compared models
+We evaluated five models under a common train–test protocol:
+  ProbModel (neural network),
+  ordinary least-squares linear regression (multi-output),
+  multi-task Elastic Net,
+  gradient-boosted trees (XGBoost, multi-output),
+  and TabPFN (one regressor per output dimension: prAD probability, ABA probability, and pseudotime).
+Model-specific training settings were held constant across all bootstrap iterations.
+
+Bootstrap evaluation
+Performance was estimated using B = 50 bootstrap resampling iterations. In each iteration b = 0, …, 49, the full shared cohort was randomly partitioned into training (75%) and test (25%) subsets (random_state = b). Each model was trained on the training subset and evaluated on the corresponding test subset. For ProbModel, training used validation-based early stopping on an inner 75%/25% split of the bootstrap training set (random_state = 42). All other models were fit directly on the bootstrap training data without early stopping.
+
+Performance metrics
+For each bootstrap iteration and model, we computed the following metrics on the bootstrap test set.
+
+Loss-based metrics (computed from raw model outputs; branch probabilities evaluated after softmax):
+  total loss (cross-entropy + KL divergence + pseudotime MSE),
+  cross-entropy loss,
+  KL divergence loss,
+  and pseudotime MSE.
+
+Global correlation metrics:
+  Pearson and Spearman correlations between predicted and ground-truth prAD probability, ABA probability, and pseudotime.
+
+Branch-specific pseudotime metrics:
+  Pearson and Spearman correlations for pseudotime restricted to test samples assigned to each trajectory by predicted branch probability (> 0.5 for prAD or ABA),
+  and the mean of the two branch-specific correlation values (with branch-specific metrics set to missing when fewer than two test samples were assigned to a branch).
+
+Aggregation and visualization
+For each model and metric, we summarized performance across the B = 50 bootstrap iterations as the mean ± standard deviation. Model comparisons were visualized as box plots of the bootstrap metric distributions, both for individual metrics and for grouped panels (loss metrics, global Spearman correlations, and global Pearson correlations).

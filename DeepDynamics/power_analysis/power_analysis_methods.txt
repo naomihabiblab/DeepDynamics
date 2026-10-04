@@ -1,0 +1,29 @@
+Power analysis (Methods)
+
+We performed power analyses to quantify sensitivity for detecting group effects on pathology measures (amyloid_mf, tangles_mf, cogng_demog_slope) along two disease trajectories (prAD and ABA). Subjects were assigned to trajectories using posterior trajectory probabilities (prAD, ABA) and pseudotime: samples with pseudotime < 0.1 were labeled healthy and excluded; remaining samples were assigned to prAD if prAD probability > 0.5 or to ABA if ABA probability > 0.5. Analyses were restricted to samples with non-missing pathology values, pseudotime, cohort label, and group indicator, and to cohorts defined as shared (subjects with both single-cell and bulk RNA-seq) or unshared (subjects with bulk RNA-seq only).
+
+Regression models and tested effects
+For each trajectory and pathology outcome, we fit ordinary least squares (OLS) regression models including a binary group indicator G∈{0,1} and pseudotime t. Pseudotime was discretized to a 0.1 grid (numeric quantization anchored at 0.1) and mean-centered within each analyzed subset to yield t~. We evaluated two effects:
+
+- Mean difference:
+  y = β0 + β1·G + β2·t~ + ε,
+  where β1 represents the group difference at the average (centered) pseudotime.
+
+Statistical testing
+For each fitted model, inference was performed using a t-test for the coefficient of interest (β1 for mean difference; β3 for dynamic difference):
+  t = β̂j / SE(β̂j),   df = n − p,
+where n is the number of observations in the subset and p is the number of model parameters. Standard errors were computed from the OLS covariance estimate,
+  Var(β̂)=σ̂^2·(XᵀX)⁻¹,   σ̂^2 = Σi(yi − ŷi)² / (n − p).
+We used a significance level of α=0.05 with one-sided alternatives specified a priori for each pathology (greater for amyloid_mf and tangles_mf; less for cogng_demog_slope). Subsets with fewer than two samples per group were not evaluated.
+
+Power estimation
+Power was estimated using two complementary approaches:
+
+1. Analytic power: computed from the noncentral t distribution using the fitted effect size, residual standard deviation σ̂, and (XᵀX)⁻¹ for the coefficient of interest.
+
+2. Simulation-based power: estimated by simulating S=1000 outcome datasets under the fitted OLS model,
+   y(s) = X·β̂ + ε(s),   ε(s) ~ N(0, σ̂^2),
+refitting the model for each simulation, and computing the fraction of simulations for which the one-sided test rejected H0 at α=0.05.
+
+Cohort-scope and incremental sampling analyses
+Power was computed separately for three cohort scopes: shared-only, unshared-only, and all samples combined. To assess the impact of adding bulk-only samples to the shared set, we additionally performed an incremental sampling analysis in which we started from the shared cohort and added increasing fractions of unshared samples using stratified sampling, then recomputed power for each fraction.
