@@ -21,7 +21,8 @@ mediators of Alzheimer's disease.
 DeepDynamics/
 ├── DeepDynamics/
 │   ├── DeepDynamics_example.ipynb   # End-to-end guided tutorial
-│   ├── deepdynamics.yml             # Conda environment export
+│   ├── deepdynamics.yml             # Python/ML Conda environment (dd)
+│   ├── deepdynamics-r.yml           # R analysis Conda environment (dd_r)
 │   ├── prediction/                  # Model, loss, data structures, and training code
 │   ├── explainability/              # Model-explainability notebook
 │   ├── benchmarking/                # Baseline comparisons and DTW analyses
@@ -56,8 +57,8 @@ The main components are:
 
 - Git
 - Conda or Mamba
-- Linux is recommended because `deepdynamics.yml` was exported from a Linux
-  environment.
+- Linux is recommended because the supplied environments reproduce the Linux
+  environments used for the analyses.
 - A CUDA-capable GPU is optional. CPU execution is supported but model fitting
   and repeated benchmarking will be slower.
 - R is required only for the analyses under `DeepDynamics_analyses/` and for
@@ -70,37 +71,51 @@ git clone https://github.com/naomihabiblab/DeepDynamics.git
 cd DeepDynamics
 ```
 
-### Create the Python environment
+### Create the Python/ML environment (`dd`)
 
-Create an environment from the supplied Conda export. Passing `--name`
-overrides the environment name stored in the exported YAML.
-
-```bash
-conda env create \
-  --name deepdynamics \
-  --file DeepDynamics/deepdynamics.yml
-conda activate deepdynamics
-```
-
-The supplied environment includes Python, PyTorch, Scanpy, AnnData, NumPy,
-Pandas, SciPy, scikit-learn, Matplotlib, Seaborn, Statsmodels, and the Jupyter
-kernel components.
-
-Install JupyterLab plus the additional benchmarking dependencies with:
+The main environment contains the Python 3.11, PyTorch, Scanpy, benchmarking,
+power-analysis, and scaling-analysis stack used in this work.
 
 ```bash
-python -m pip install jupyterlab optuna xgboost tabpfn
+conda env create --file DeepDynamics/deepdynamics.yml
+conda activate dd
 ```
 
-If GPU execution is required, install the PyTorch build matching the CUDA
-version available on the system after creating the environment. See the
-[PyTorch installation guide](https://pytorch.org/get-started/locally/) for the
-appropriate command.
+The file records the CUDA 11.8 PyTorch wheels used in the original `dd`
+environment. A compatible NVIDIA driver is required for this build. On a CPU
+machine, create the environment without the three CUDA-specific PyTorch wheel
+entries and then install the CPU build described in the
+[PyTorch installation guide](https://pytorch.org/get-started/locally/).
 
-### Optional R environment
+JupyterLab can be installed in `dd` if it is not already available from the
+host system:
 
-The R analysis utilities use CRAN and Bioconductor packages. A minimal setup can
-be created from R as follows:
+```bash
+python -m pip install jupyterlab
+```
+
+### Create the R environment (`dd_r`)
+
+The R-based dynamics and paper-analysis workflow was run in a separate
+environment:
+
+```bash
+conda env create --file DeepDynamics/deepdynamics-r.yml
+conda activate dd_r
+```
+
+The environments are intentionally separate. `dd` uses Python 3.11 and the
+PyTorch ML stack, whereas `dd_r` uses R 4.5 and includes Python 3.14 as a
+dependency of the pandas/Matplotlib tools used there. Combining these package
+sets makes dependency resolution less reliable. Use `dd` for model training,
+benchmarking, notebooks, power analysis, and scaling analysis; use `dd_r` for
+R scripts and R-based trajectory-dynamics steps.
+
+### Additional paper-analysis R packages
+
+The `DeepDynamics_analyses/` utilities also reference the following CRAN and
+Bioconductor packages. If a script reports a missing package after activating
+`dd_r`, install the remaining paper-specific dependencies from R:
 
 ```r
 install.packages(c(
@@ -120,22 +135,30 @@ BiocManager::install(c(
 
 ## Input data
 
-Study-level input data are not distributed in this repository. Users should
-provide their own authorized data or the synthetic tutorial cohort when it is
-available. Do not commit participant-level or otherwise restricted data.
+Study-level participant data are **not** distributed in this repository. Do not
+commit participant-level or otherwise restricted data.
 
-The guided notebook expects its inputs under `DeepDynamics/prediction/data/`.
-The principal files used by the current workflows are:
+A **synthetic tutorial cohort** is included under
+`DeepDynamics/prediction/data/synthetic/` so the guided notebook can be run
+without access to the study data. Donor identifiers and all numeric values in
+that directory are simulated. See
+`DeepDynamics/prediction/data/synthetic/README.md` for details.
 
 ```text
-DeepDynamics/prediction/data/
-├── 500.h5ad                       # Reference AnnData object
-├── shared_bulk_data_mask.csv      # Bulk-derived input features
-└── y.csv                          # Branch probabilities and pseudotime targets
+DeepDynamics/prediction/data/synthetic/
+├── README.md                      # Synthetic-data notice
+├── 500.h5ad                       # Synthetic AnnData object
+├── shared_bulk_data_0.005.csv     # Filtered bulk features for the tutorial
+├── shared_bulk_target_0.005.csv   # Branch probabilities and pseudotime
+├── shared_bulk_data_mask.csv      # Same features under preprocess naming
+├── y.csv                          # Same targets under preprocess naming
+├── features_names.csv             # Retained cell-state names
+└── X.npy                          # Synthetic single-cell matrix after filtering
 ```
 
-The tutorial also refers to filtered synthetic tables named
-`shared_bulk_data_0.005.csv` and `shared_bulk_target_0.005.csv`.
+Authorized study data, when available locally, remain outside this repository
+under `DeepDynamics/prediction/data/` and are not required for the synthetic
+tutorial path.
 
 Power analysis uses a separate metadata table supplied with `--metadata`. The
 required columns are documented in `DeepDynamics/power_analysis/config.py`.
@@ -147,7 +170,7 @@ Run commands from the repository root unless noted otherwise.
 ### Guided notebook
 
 ```bash
-conda activate deepdynamics
+conda activate dd
 jupyter lab DeepDynamics/DeepDynamics_example.ipynb
 ```
 
@@ -158,6 +181,7 @@ inspecting predictions. The notebook is committed without saved outputs.
 ### Explainability notebook
 
 ```bash
+conda activate dd
 jupyter lab DeepDynamics/explainability/Model_Explainability_analysis.ipynb
 ```
 
@@ -167,6 +191,7 @@ running it.
 ### Power analysis
 
 ```bash
+conda activate dd
 cd DeepDynamics
 python -m power_analysis.power_analysis \
   --metadata /path/to/metadata.csv
@@ -180,6 +205,7 @@ bootstrap, significance-level, and sampling-fraction options.
 After placing the feature and target tables under `prediction/data/`:
 
 ```bash
+conda activate dd
 cd DeepDynamics
 python scaling_laws/scaling_laws.py
 ```
@@ -189,12 +215,17 @@ python scaling_laws/scaling_laws.py
 The DTW utility compares already-smoothed ground-truth and model dynamics:
 
 ```bash
+conda activate dd
 cd DeepDynamics
 python benchmarking/dtw_dynamics.py \
   --gt-pred-vals /path/to/ground_truth_dynamics_pred_vals.csv \
   --outputs-dir /path/to/model_dynamics_outputs \
   --out-csv /path/to/dtw_dynamics.csv
 ```
+
+If the ground-truth dynamics must first be generated by an R workflow,
+activate `dd_r` for that R step, then return to `dd` for the Python DTW
+comparison.
 
 ## Generated files
 

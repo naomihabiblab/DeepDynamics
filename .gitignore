@@ -1,0 +1,6 @@
+
+# Keep the synthetic tutorial cohort in version control
+!prediction/data/synthetic/
+!prediction/data/synthetic/**
+!DeepDynamics/prediction/data/synthetic/
+!DeepDynamics/prediction/data/synthetic/**
