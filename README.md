@@ -28,6 +28,7 @@ DeepDynamics/
 │   ├── DeepDynamics_example.ipynb   # End-to-end guided tutorial
 │   ├── deepdynamics.yml             # Python/ML Conda environment (dd)
 │   ├── deepdynamics-r.yml           # R analysis Conda environment (dd_r)
+│   ├── examples/                    # Runnable synthetic end-to-end example
 │   ├── prediction/                  # Model, loss, data structures, and training code
 │   ├── explainability/              # Model-explainability notebook
 │   ├── benchmarking/                # Baseline comparisons and DTW analyses
@@ -45,6 +46,8 @@ The main components are:
 
 - `prediction/`: PyTorch implementation of DeepDynamics, including the model,
   loss function, dataset wrapper, preprocessing, and training utilities.
+- `examples/`: a command-line synthetic-data run covering feature filtering,
+  training, held-out evaluation, prediction, and cell-state dynamics plots.
 - `benchmarking/`: comparisons with linear regression, Elastic Net, XGBoost,
   and TabPFN, together with correlation, loss, visualization, and dynamic time
   warping utilities. Text files in this directory describe the associated
@@ -171,6 +174,57 @@ required columns are documented in `DeepDynamics/power_analysis/config.py`.
 ## Getting started
 
 Run commands from the repository root unless noted otherwise.
+
+### Synthetic end-to-end example
+
+The synthetic example trains the original `ProbModel`, evaluates it on a
+reproducible held-out split, predicts trajectories for all synthetic bulk
+samples, and creates dynamics plots for three cell states. It refuses inputs
+that are not explicitly marked synthetic and requires its output directory to
+be outside the repository.
+
+From the directory containing `prediction/` and `examples/` (the
+`DeepDynamics/` subdirectory in this paper repository), run:
+
+```bash
+conda activate dd
+python examples/run_synthetic_pipeline.py \
+  --device cpu \
+  --output-dir /path/outside/the/repository/deepdynamics-toy
+```
+
+The output directory contains:
+
+```text
+deepdynamics-toy/
+├── run_summary.json       # Settings, dimensions, and held-out metrics
+├── predictions.csv        # Predicted trajectories for synthetic bulk samples
+├── dynamics_input.csv     # Three cell states joined to model predictions
+└── dynamics/
+    ├── <cell-state-1>_dynamics.png
+    ├── <cell-state-2>_dynamics.png
+    └── <cell-state-3>_dynamics.png
+```
+
+The adjusted-p-value cutoff defaults to `0.005`, and the target columns default
+to `prAD`, `ABA`, and `psuedotime`. They can be changed without editing code:
+
+```bash
+python examples/run_synthetic_pipeline.py \
+  --output-dir /path/outside/the/repository/deepdynamics-toy \
+  --adj-pval-threshold 0.005 \
+  --min-correlation 0 \
+  --trajectory-columns prAD ABA \
+  --pseudotime-column psuedotime \
+  --plot-cell-states Arteriole Ast.1 Ast.10
+```
+
+If `--plot-cell-states` is omitted, the three retained cell states with the
+strongest stored positive correlations are used. Each plot shows both
+probability-weighted trajectory curves with 95% confidence bands. The expected
+371 labelled samples, 58 retained features, 278/93 split, and 673 validation
+samples apply specifically to the supplied synthetic cohort; other compatible
+synthetic inputs are reported using their observed dimensions.
 
 ### Guided notebook
 
