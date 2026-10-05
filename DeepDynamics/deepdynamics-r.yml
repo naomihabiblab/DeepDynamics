@@ -1,0 +1,25 @@
+name: dd_r
+
+channels:
+  - conda-forge
+
+dependencies:
+  - r-base=4.5.2
+  - r-mgcv=1.9_4
+  - r-dplyr=1.2.0
+  - r-tidyr=1.3.2
+  - r-purrr=1.2.1
+  - r-progress=1.2.3
+  - r-pbapply=1.7_4
+  - r-ggplot2=4.0.2
+  - r-cowplot=1.2.0
+  - r-ggnewscale=0.5.2
+  - r-ggrepel=0.9.6
+  - r-scales=1.4.0
+  # pandas and Matplotlib were also installed in dd_r. They bring their own
+  # Python runtime, so this environment remains separate from the ML stack.
+  - python=3.14
+  - numpy=2.4.2
+  - pandas=3.0.0
+  - matplotlib=3.10.8
+  - zlib=1.3.1
