@@ -1,0 +1,5 @@
+notebooks/outputs/
+.Rhistory
+.RData
+.DS_Store
+**/.DS_Store

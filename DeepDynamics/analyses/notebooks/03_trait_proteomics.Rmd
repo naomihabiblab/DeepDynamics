@@ -1,0 +1,46 @@
+---
+title: "03 — Trait association + proteomics"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+---
+
+Synthetic cohort only — outputs are **not** paper results.
+
+Trait association heatmaps (sex/APOE and `SIG.CLUSTERS`) and proteomics density
+Wilcoxon (`23`/`33` vs `34`/`44`).
+
+CLI equivalent: `Rscript notebooks/03_trait_proteomics.R` (from `DeepDynamics/analyses/`).
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE)
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+```
+
+```{r run}
+source("notebooks/03_trait_proteomics.R")
+```
+
+## Sex and APOE trait heatmaps
+
+```{r ta-sex-apoe, fig.width=10, fig.height=4}
+grid.arrange(
+  grid.grabExpr(draw(p.sex, heatmap_legend_side = "bottom")),
+  grid.grabExpr(draw(p.apoe, heatmap_legend_side = "bottom")),
+  ncol = 2
+)
+```
+
+## States × pathologies heatmap
+
+```{r ta-states, fig.width=14, fig.height=4}
+draw(p.states, heatmap_legend_side = "bottom")
+```
+
+## Proteomics density
+
+```{r proteomics, fig.width=5, fig.height=3.5}
+print(p)
+```
