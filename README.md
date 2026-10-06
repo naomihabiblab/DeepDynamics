@@ -29,25 +29,24 @@ DeepDynamics/
 │   ├── deepdynamics.yml             # Python/ML Conda environment (dd)
 │   ├── deepdynamics-r.yml           # R analysis Conda environment (dd_r)
 │   ├── examples/                    # Runnable synthetic end-to-end example
-│   ├── prediction/                  # Model, loss, data structures, and training code
+│   ├── prediction/                  # Model, loss, data, synthetic cohort, training
+│   ├── analyses/                    # Synthetic method samples (GAM, DEG, TA, proteomics)
 │   ├── explainability/              # Model-explainability notebook
 │   ├── benchmarking/                # Baseline comparisons and DTW analyses
 │   ├── power_analysis/              # Cohort and incremental-sampling power analyses
 │   └── scaling_laws/                # Training-cohort-size scaling analysis
-├── DeepDynamics_analyses/
-│   ├── scripts/                     # Figure and validation analysis scripts
-│   └── src/
-│       ├── utils/                   # Shared R analysis utilities
-│       └── visualization/           # Figure-generation functions
 └── README.md
 ```
 
 The main components are:
 
 - `prediction/`: PyTorch implementation of DeepDynamics, including the model,
-  loss function, dataset wrapper, preprocessing, and training utilities.
+  loss function, dataset wrapper, preprocessing, training utilities, and the
+  synthetic tutorial cohort under `prediction/data/synthetic/`.
 - `examples/`: a command-line synthetic-data run covering feature filtering,
   training, held-out evaluation, prediction, and cell-state dynamics plots.
+- `analyses/`: synthetic method samples for pathway dynamics GAMs, DEG
+  contrasts, trait association, and proteomics (see `analyses/notebooks/`).
 - `benchmarking/`: comparisons with linear regression, Elastic Net, XGBoost,
   and TabPFN, together with correlation, loss, visualization, and dynamic time
   warping utilities. Text files in this directory describe the associated
@@ -56,8 +55,6 @@ The main components are:
   effects along the prAD and ABA trajectories.
 - `scaling_laws/`: analysis of predictive performance as a function of bulk
   training-cohort size.
-- `DeepDynamics_analyses/`: R scripts used for the paper-level downstream
-  analyses and figure generation.
 
 ## Installation
 
@@ -69,7 +66,7 @@ The main components are:
   environments used for the analyses.
 - A CUDA-capable GPU is optional. CPU execution is supported but model fitting
   and repeated benchmarking will be slower.
-- R is required only for the analyses under `DeepDynamics_analyses/` and for
+- R is required only for the analyses under `DeepDynamics/analyses/` and for
   R-based trajectory-dynamics workflows.
 
 ### Clone the repository
@@ -119,26 +116,21 @@ sets makes dependency resolution less reliable. Use `dd` for model training,
 benchmarking, notebooks, power analysis, and scaling analysis; use `dd_r` for
 R scripts and R-based trajectory-dynamics steps.
 
-### Additional paper-analysis R packages
+### Additional R packages for analysis samples
 
-The `DeepDynamics_analyses/` utilities also reference the following CRAN and
-Bioconductor packages. If a script reports a missing package after activating
-`dd_r`, install the remaining paper-specific dependencies from R:
+The synthetic notebooks under `DeepDynamics/analyses/notebooks/` use the
+following packages beyond a minimal `dd_r` install:
 
 ```r
 install.packages(c(
-  "anndata", "boot", "circlize", "colorspace", "cowplot", "dendsort",
-  "dplyr", "ggnewscale", "ggplot2", "ggrepel", "gridExtra", "mgcv",
-  "pheatmap", "progress", "purrr", "RColorBrewer", "reshape2",
-  "reticulate", "stringr", "tidyr", "tidyverse"
+  "dplyr", "ggplot2", "ggrepel", "mgcv", "stringr", "tidyr"
 ))
 
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
-BiocManager::install(c(
-  "biomaRt", "ComplexHeatmap", "EnhancedVolcano", "SummarizedExperiment"
-))
+BiocManager::install(c("edgeR", "SummarizedExperiment"))
+install.packages("Seurat")
 ```
 
 ## Input data
@@ -155,13 +147,17 @@ that directory are simulated. See
 ```text
 DeepDynamics/prediction/data/synthetic/
 ├── README.md                      # Synthetic-data notice
+├── ANALYSIS_EXTRAS_README.md      # Method-sample CSVs notice
 ├── 500.h5ad                       # Synthetic AnnData object
 ├── shared_bulk_data_0.005.csv     # Filtered bulk features for the tutorial
 ├── shared_bulk_target_0.005.csv   # Branch probabilities and pseudotime
 ├── shared_bulk_data_mask.csv      # Same features under preprocess naming
 ├── y.csv                          # Same targets under preprocess naming
 ├── features_names.csv             # Retained cell-state names
-└── X.npy                          # Synthetic single-cell matrix after filtering
+├── X.npy                          # Synthetic single-cell matrix after filtering
+├── donor_meta.csv                 # Analysis extras (covariates, SIG.CLUSTERS)
+├── scrna_*.csv / pathway_genes.csv
+└── proteomics_*.csv
 ```
 
 Authorized study data, when available locally, remain outside this repository
@@ -236,6 +232,38 @@ jupyter lab DeepDynamics/DeepDynamics_example.ipynb
 The notebook walks through loading the reference atlas and bulk-derived cell
 state proportions, preparing trajectory targets, training DeepDynamics, and
 inspecting predictions. The notebook is committed without saved outputs.
+
+### Downstream analysis samples (synthetic)
+
+Runnable method samples live under `DeepDynamics/analyses/notebooks/`:
+
+1. **Dynamics.** Part A: merged pathway `AddModuleScore` + per-genotype GAM
+   `mean_scaled ~ s(pseudotime, k=7) + batch` (levels `ROSMAP`/`cuimc2`; ribbon
+   predicted at batch `ROSMAP`) and dynamics ANOVA with `k=7` and `+ batch`.
+   Part B: original-cohort `Ast.10` and `sqrt.amyloid_mf` GAMs
+   (`s(pseudotime)` / `apoe_4 + s(pseudotime, by=apoe_4)`; no batch, no `k`).
+2. **Merged DEGs.** Healthy-window edgeR `~ apoe_4 + dataset` with
+   `glmQLFTest(..., coef = 2)`; Poisson `FindMarkers` with latents
+   `dataset.num`, `projid.num`, `sex_num`; Fig 5-style volcano.
+3. **Trait association + proteomics.** `trait ~ covariate + age_death + pmi + RIN`
+   and proteomics genotype Wilcoxon. No ANOVA in this notebook.
+
+Synthetic cohort and extras are committed under
+`DeepDynamics/prediction/data/synthetic/`. Run from `DeepDynamics/analyses/`:
+
+```bash
+cd DeepDynamics/analyses
+Rscript notebooks/01_pathway_gam_dataset_batch.R
+Rscript notebooks/02_deg_and_fig5_heatmap.R
+Rscript notebooks/03_trait_proteomics.R
+```
+
+Open the knitted `.html` files under `DeepDynamics/analyses/notebooks/` to view
+figures without re-running. Re-knit with `rmarkdown::render("notebooks/0X_….Rmd")`
+from `analyses/`, or use the `.R` / `.Rmd` sources to re-run. See
+`DeepDynamics/analyses/README.md` and
+`DeepDynamics/prediction/data/synthetic/ANALYSIS_EXTRAS_README.md`. Outputs are
+toy demonstrations and are not scientific results.
 
 ### Explainability notebook
 

@@ -3,9 +3,9 @@
 **This directory contains a synthetic dataset.**
 
 Donor identifiers and all numeric values are simulated. The files are provided
-so the DeepDynamics tutorial notebook can be run without study-restricted
-RNA-seq data. They are not a biological surrogate of the study cohort and
-should not be interpreted as scientific results.
+so the DeepDynamics tutorial notebook and method samples can be run without
+study-restricted RNA-seq data. They are not a biological surrogate of the study
+cohort and should not be interpreted as scientific results.
 
 ## Contents
 
@@ -25,5 +25,16 @@ cell states retained by the correlation filter.
 
 ## Usage
 
-The guided notebook reads these files from `prediction/data/synthetic/`.
-Study-level data under `prediction/data/500.h5ad` are not distributed here.
+The guided notebook and `examples/run_synthetic_pipeline.py` read these files
+from `prediction/data/synthetic/`. Study-level data under `prediction/data/500.h5ad`
+are not distributed here.
+
+These files are committed for the tutorial and method samples; no regenerate
+step is required to run the analyses.
+
+## Analysis method samples
+
+Additional CSVs (`donor_meta.csv`, `scrna_*.csv`, `proteomics_*.csv`,
+`pathway_genes.csv`) support the R Markdown samples under
+`../../analyses/notebooks/`. See `ANALYSIS_EXTRAS_README.md`.
+These files are simulated and are not study results.

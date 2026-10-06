@@ -1,0 +1,30 @@
+---
+title: "02 — Merged DEGs (edgeR + Poisson)"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+---
+
+Synthetic cohort only — outputs are **not** paper results.
+
+Healthy-window edgeR (`~ apoe_4 + dataset`, `coef = 2`) and Poisson `FindMarkers`
+(latents `dataset.num`, `projid.num`, `sex_num`), plus a Fig 5-style volcano.
+
+CLI equivalent: `Rscript notebooks/02_deg_and_fig5_heatmap.R` (from `DeepDynamics/analyses/`).
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE)
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+```
+
+```{r run}
+source("notebooks/02_deg_and_fig5_heatmap.R")
+```
+
+## Volcano (edgeR)
+
+```{r volcano, fig.width=5, fig.height=4.5}
+print(p)
+```

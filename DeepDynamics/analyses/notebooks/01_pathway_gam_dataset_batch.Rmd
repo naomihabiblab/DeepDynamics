@@ -1,0 +1,36 @@
+---
+title: "01 — Dynamics (pathway + cohort)"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+---
+
+Synthetic cohort only — outputs are **not** paper results.
+
+- **Part A:** merged pathway GAM (`k = 7` + `batch`; ribbon at batch `ROSMAP`)
+- **Part B:** cohort `Ast.10` / `sqrt.amyloid_mf` GAMs (no batch, no `k`)
+
+CLI equivalent: `Rscript notebooks/01_pathway_gam_dataset_batch.R` (from `DeepDynamics/analyses/`).
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE)
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+```
+
+```{r run}
+source("notebooks/01_pathway_gam_dataset_batch.R")
+```
+
+## Part A — merged pathway
+
+```{r part-a, fig.width=5.5, fig.height=3.5}
+print(p_a)
+```
+
+## Part B — cohort cell state and pathology
+
+```{r part-b, fig.width=10, fig.height=3.5}
+print(p_ast + p_amy)
+```
